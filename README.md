@@ -68,8 +68,8 @@ curl -s http://<server>:7070/setup.sh | bash
 
 ## 界面展示 🖼️ / Screenshots
 
-| 首页 Homepage | 技能市场 Skills Marketplace |
-|---------------|-----------------------------|
+| | |
+|---|---|
 | ![首页](docs/screenshots/homepage.png) | ![技能市场](docs/screenshots/skills.png) |
 
 ---
