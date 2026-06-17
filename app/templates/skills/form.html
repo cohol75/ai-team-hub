@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{% if skill and skill.id %}编辑技能{% else %}提交新技能{% endif %}</h1>
+</div>
+
+{% if error %}
+<div class="card" style="border-color:var(--danger);background:#fff5f5;margin-bottom:1.5rem;color:var(--danger);">
+  <strong>提交失败：</strong>{{ error }}
+</div>
+{% endif %}
+
+<form method="post"
+      action="{% if skill and skill.id %}/skills/{{ skill.id }}/edit{% else %}/skills/new{% endif %}">
+  <div class="form-group">
+    <label>技能标题</label>
+    <input type="text" class="form-control" name="title" required maxlength="200"
+           placeholder="简洁描述这个技能做什么，如：Python 代码审查助手"
+           value="{{ skill.title if skill else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label>作者</label>
+    <input type="text" class="form-control" name="author" required maxlength="100"
+           placeholder="你的名字"
+           value="{{ skill.author if skill else '' }}">
+  </div>
+
+  <div class="form-section">
+    <h2>使用说明（Markdown）</h2>
+    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;line-height:1.6;">
+      <strong>请尽量详细，包含以下内容：</strong>
+      <ul style="margin:0.3rem 0;padding-left:1.2rem;">
+        <li>这个技能解决什么问题？</li>
+        <li>适合什么场景使用？举个具体例子</li>
+        <li>使用前需要什么前置条件（环境、依赖、权限）？</li>
+        <li>使用时要注意什么？有哪些坑？</li>
+        <li>如果有输出，大致长什么样？</li>
+      </ul>
+      同事会直接看这段来上手，<strong>不要一句话概括</strong>。
+    </div>
+    <textarea class="form-control" name="human_section" required style="min-height:200px;"
+              placeholder="## 功能
+
+这个技能用于……&#10;&#10;## 适用场景&#10;&#10;比如你要……&#10;&#10;## 前置条件&#10;&#10;- Python 3.10+&#10;- ……&#10;&#10;## 使用方式&#10;&#10;1. ……&#10;2. ……&#10;&#10;## 注意事项&#10;&#10;- ……&#10;&#10;## 示例输出&#10;&#10;```&#10;……&#10;```">{{ skill.human_section if skill else '' }}</textarea>
+  </div>
+
+  <div class="form-section">
+    <h2>Agent 执行指令（YAML）</h2>
+    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">
+      给 Agent 读的结构化指令。必须包含 name、version、description、category、steps。
+      <a href="/docs/skill-spec.md" target="_blank">查看完整格式规范</a>
+    </div>
+    <textarea class="form-control code" name="agent_section" required
+              placeholder="name: my-skill&#10;version: &quot;1.0.0&quot;&#10;description: &quot;一句话描述&quot;&#10;category: other&#10;model: claude-opus-4&#10;model_provider: anthropic&#10;tags:&#10;  - example&#10;steps:&#10;  - step: 1&#10;    action: analyze&#10;    instruction: &quot;具体做什么，尽量写清楚&quot;&#10;    expected_output: &quot;期望的输出是什么&quot;">{{ skill.agent_section if skill else '' }}</textarea>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div class="form-group">
+      <label>使用的模型</label>
+      <input type="text" class="form-control" name="model_used" placeholder="如 claude-opus-4"
+             value="{{ skill.model_used if skill else '' }}">
+    </div>
+    <div class="form-group">
+      <label>模型提供商</label>
+      <input type="text" class="form-control" name="model_provider" placeholder="如 anthropic"
+             value="{{ skill.model_provider if skill else '' }}">
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div class="form-group">
+      <label>分类</label>
+      <select class="form-control" name="category">
+        {% for c in ['code-review','debugging','deployment','testing','architecture','documentation','refactoring','performance','security','data-processing','frontend','devops','other'] %}
+        <option value="{{ c }}" {% if skill and skill.category == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>标签（逗号分隔）</label>
+      <input type="text" class="form-control" name="tags" placeholder="python,fastapi,testing"
+             value="{{ skill.tags if skill else '' }}">
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    {% if skill and skill.id %}更新技能{% else %}提交技能{% endif %}
+  </button>
+  <a href="/skills" class="btn btn-outline">取消</a>
+</form>
+{% endblock %}

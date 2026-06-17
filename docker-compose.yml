@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    ports:
+      - "7070:7070"
+    env_file:
+      - .env
+    volumes:
+      - hub_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  hub_data:

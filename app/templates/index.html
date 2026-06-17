@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>AI Team Hub</h1>
+</div>
+
+<div class="card" style="border-color:var(--primary);background:#f8faff;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;">
+  <span><strong>💡 {{ t('home_guide_title') }}</strong></span>
+  <a href="/guide" class="btn btn-outline btn-sm">{{ t('home_guide_link') }}</a>
+</div>
+
+<div class="status-bar">
+  <div><strong>{{ skills_count }}</strong> {{ t('home_skills_count') }}</div>
+  <div><strong>{{ open_problems_count }}</strong> {{ t('home_problems_count') }}</div>
+  <div>{{ t('home_tagline') }}</div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size:1.1rem">{{ t('home_recent_projects') }}</h2>
+      <a href="/projects" class="btn btn-outline btn-sm">{{ t('home_view_all') }}</a>
+    </div>
+    {% if projects %}
+      {% for p in projects %}
+      <div class="card" style="cursor:pointer;" onclick="location.href='/projects/{{ p.id }}'">
+        <h3><a href="/projects/{{ p.id }}" onclick="event.stopPropagation()">{{ p.title }}</a></h3>
+        <div class="meta">
+          <span>{{ p.author }}</span>
+          <span>{{ p.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        </div>
+        <div class="excerpt">{{ p.content[:200] }}{% if p.content|length > 200 %}...{% endif %}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="card" style="text-align:center;padding:2rem;color:var(--text-muted);">
+        {{ t('home_no_projects') }}，<a href="/projects/new">{{ t('home_new_project') }}</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size:1.1rem">{{ t('home_recent_skills') }}</h2>
+      <a href="/skills" class="btn btn-outline btn-sm">{{ t('home_view_all') }}</a>
+    </div>
+    {% if skills %}
+      {% for s in skills %}
+      <div class="card" style="cursor:pointer;" onclick="location.href='/skills/{{ s.id }}'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.3rem;">
+          <h3 style="margin:0;"><a href="/skills/{{ s.id }}" onclick="event.stopPropagation()">{{ s.title }}</a></h3>
+          <span class="badge badge-category">{{ cat_label(s.category) }}</span>
+        </div>
+        <div class="meta">
+          <span>{{ s.author }}</span>
+          <span>{{ s.model_used or '' }}</span>
+        </div>
+        <div class="excerpt">{{ s.human_section[:120] }}{% if s.human_section|length > 120 %}...{% endif %}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="card" style="text-align:center;padding:2rem;color:var(--text-muted);">
+        {{ t('home_no_skills') }}，<a href="/skills/new">{{ t('home_new_skill') }}</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:flex;gap:0.75rem;margin-top:1rem;justify-content:center;">
+  <a href="/projects/new" class="btn btn-primary">{{ t('home_new_project') }}</a>
+  <a href="/skills/new" class="btn btn-outline">{{ t('home_new_skill') }}</a>
+  <a href="/problems/new" class="btn btn-outline">{{ t('home_new_problem') }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ t('problems_title') }}</h1>
+  <a href="/problems/new" class="btn btn-primary">{{ t('problems_submit') }}</a>
+</div>
+
+<div class="search-bar">
+  <input type="text" class="form-control" name="search" placeholder="{{ t('problems_search') }}" value="{{ search }}"
+         hx-get="/problems" hx-trigger="keyup changed delay:300ms"
+         hx-target="#problem-list" hx-include="[name='search'],[name='status']" hx-push-url="true"
+         style="flex:1;">
+  <select class="form-control" name="status" style="width:140px;"
+          hx-get="/problems" hx-trigger="change"
+          hx-target="#problem-list" hx-include="[name='search'],[name='status']">
+    <option value="">{{ t('problems_all_status') }}</option>
+    <option value="open" {% if status == 'open' %}selected{% endif %}>{{ t('problems_open') }}</option>
+    <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>{{ t('problems_in_progress') }}</option>
+    <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>{{ t('problems_resolved') }}</option>
+  </select>
+</div>
+
+<div id="problem-list">
+{% include "components/pagination.html" %}
+
+{% if problems %}
+  <div class="grid">
+  {% for p in problems %}
+  <div class="card" style="cursor:pointer;" onclick="location.href='/problems/{{ p.id }}'">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.4rem;">
+      <h3 style="margin:0;"><a href="/problems/{{ p.id }}" onclick="event.stopPropagation()">{{ p.title }}</a></h3>
+      {% if p.status == 'open' %}
+      <span class="badge badge-open">{{ t('problems_open') }}</span>
+      {% elif p.status == 'in_progress' %}
+      <span class="badge badge-progress">{{ t('problems_in_progress') }}</span>
+      {% else %}
+      <span class="badge badge-resolved">{{ t('problems_resolved') }}</span>
+      {% endif %}
+    </div>
+    <div class="meta">
+      <span>{{ p.submitter }}</span>
+      <span>{{ p.created_at.strftime('%Y-%m-%d') }}</span>
+      {% if p.attempts|length > 0 %}
+      <span>{{ p.attempts|length }}{{ t('problems_attempts') }}</span>
+      {% endif %}
+    </div>
+    <div class="excerpt" style="max-height:6rem;overflow:hidden;">{{ p.original_task[:200] }}{% if p.original_task|length > 200 %}...{% endif %}</div>
+    <div style="margin-top:0.8rem;">
+      <a href="/problems/{{ p.id }}" class="btn btn-outline btn-sm" onclick="event.stopPropagation()">{{ t('problems_view_detail') }}</a>
+    </div>
+  </div>
+  {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="text-align:center;padding:3rem;color:var(--text-muted);">
+    {% if search or status %}{{ t('problems_no_match') }}{% else %}{{ t('problems_empty') }}，<a href="/problems/new">{{ t('problems_submit_first') }}</a>{% endif %}
+  </div>
+{% endif %}
+
+{% include "components/pagination.html" %}
+</div>
+{% endblock %}

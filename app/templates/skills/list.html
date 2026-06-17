@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ t('skills_title') }}</h1>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button id="my-skills-toggle" class="btn btn-outline btn-sm" onclick="toggleMySkills()">
+      <span id="my-skills-label">&#9734; {{ t('skills_my') }}</span>
+    </button>
+    <a href="/skills/new" class="btn btn-primary btn-sm">{{ t('skills_submit') }}</a>
+  </div>
+</div>
+
+<!-- 使用指引 -->
+<div class="card" style="border-color:var(--primary);background:#f8faff;margin-bottom:1.5rem;" id="guide-banner">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="flex:1;">
+      <strong style="font-size:0.9rem;">&#128161; {{ t('skills_guide_title') }}</strong>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.35rem;line-height:1.7;">
+        <strong>1.</strong> {{ t('skills_guide_1') }}<br>
+        <strong>2.</strong> {{ t('skills_guide_2') }}<br>
+        <strong>3.</strong> {{ t('skills_guide_3') }}
+      </div>
+    </div>
+    <div style="flex-shrink:0;margin-left:1.5rem;text-align:right;">
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.3rem;">{{ t('skills_setup_mcp') }}</div>
+      <code style="font-size:0.68rem;background:#1e1e2e;color:#a6e3a1;padding:0.3rem 0.5rem;border-radius:4px;cursor:pointer;white-space:nowrap;"
+            onclick="navigator.clipboard.writeText('curl -s {{ request.url.scheme }}://{{ request.url.netloc }}/setup.sh | bash');this.style.color='var(--success)';setTimeout(()=>this.style.color='#a6e3a1',2000)"
+            title="Click to copy">curl -s {{ request.url.scheme }}://{{ request.url.netloc }}/setup.sh | bash</code>
+      <button class="btn btn-outline btn-sm" style="display:block;margin-top:0.3rem;margin-left:auto;"
+              onclick="this.previousElementSibling.click()">{{ t('skills_copy_cmd') }}</button>
+    </div>
+    <button style="background:none;border:none;cursor:pointer;font-size:0.9rem;padding:0;line-height:1;"
+            onclick="document.getElementById('guide-banner').style.display='none'" title="Close">&#10005;</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <input type="text" class="form-control" name="search" placeholder="{{ t('skills_search') }}" value="{{ search }}"
+         hx-get="/skills" hx-trigger="keyup changed delay:300ms"
+         hx-target="#skill-list" hx-include="[name='search'],[name='category'],[name='model']" hx-push-url="true"
+         style="flex:1;">
+  <select class="form-control" name="category" style="width:160px;"
+          hx-get="/skills" hx-trigger="change"
+          hx-target="#skill-list" hx-include="[name='search'],[name='category'],[name='model']">
+    <option value="">{{ t('skills_all_categories') }}</option>
+    {% for c in ['code-review','debugging','deployment','testing','architecture','documentation','refactoring','performance','security','data-processing','frontend','devops','other'] %}
+    <option value="{{ c }}" {% if category == c %}selected{% endif %}>{{ cat_label(c) }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div id="skill-list">
+{% include "components/pagination.html" %}
+
+{% if skills %}
+  <div class="grid">
+  {% for s in skills %}
+  <div class="card skill-card" data-skill-name="{{ s.name }}" id="card-{{ s.id }}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.4rem;">
+      <h3 style="margin:0;"><a href="/skills/{{ s.id }}">{{ s.title }}</a></h3>
+      <div style="display:flex;gap:0.3rem;align-items:center;">
+        <button class="star-btn" data-name="{{ s.name }}" onclick="toggleSkill('{{ s.name }}', this)" title="Add to My Skills">
+          &#9734;
+        </button>
+        <span class="badge badge-category">{{ cat_label(s.category) }}</span>
+      </div>
+    </div>
+    <div class="meta">
+      <span>{{ s.author }}</span>
+      <span>{{ s.model_used or t('skill_model') }}</span>
+      <span>{{ s.created_at.strftime('%Y-%m-%d') }}</span>
+    </div>
+    <div class="excerpt" style="max-height:6rem;overflow:hidden;">{{ s.human_section[:300] }}{% if s.human_section|length > 300 %}...{% endif %}</div>
+    {% if s.tags %}
+    <div style="margin-top:0.5rem;">
+      {% for t in s.tags.split(',')[:5] %}
+      <span class="badge" style="background:var(--bg);color:var(--text-muted);border:1px solid var(--border);margin-right:0.3rem;">{{ t.strip() }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <div style="margin-top:0.8rem;">
+      <a href="/skills/{{ s.id }}" class="btn btn-outline btn-sm">{{ t('skills_view_detail') }}</a>
+    </div>
+  </div>
+  {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="text-align:center;padding:3rem;color:var(--text-muted);">
+    {% if search or category %}{{ t('skills_no_match') }}{% else %}{{ t('skills_empty') }}，<a href="/skills/new">{{ t('skills_submit_first') }}</a>{% endif %}
+  </div>
+{% endif %}
+
+{% include "components/pagination.html" %}
+
+<!-- My Skills summary -->
+<div id="my-skills-summary" style="display:none;margin-top:1rem;">
+  <div class="card" style="border-color:var(--primary);background:#f8faff;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <strong style="font-size:0.9rem;">&#9733; {{ t('skills_my') }} (<span id="my-count">0</span>{{ t('skills_my_count') }})</strong>
+      <div style="display:flex;gap:0.4rem;">
+        <button class="btn btn-outline btn-sm" onclick="copyMySkillsConfig()">{{ t('skills_copy_mcp_call') }}</button>
+        <button class="btn btn-outline btn-sm" onclick="copyMySkillNames()">{{ t('skills_copy_names') }}</button>
+      </div>
+    </div>
+    <div id="my-skills-list" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted);"></div>
+    <div style="margin-top:0.5rem;font-size:0.72rem;color:var(--text-muted);">{{ t('skills_agent_hint') }}</div>
+  </div>
+</div>
+</div>
+
+<script>
+// Per-user skill selection via localStorage
+const STORAGE_KEY = 'ai-team-hub-my-skills';
+const MY_SKILLS_LABEL = '{{ t('skills_my') }}';
+
+function getMySkills() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveMySkills(names) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(names));
+}
+
+function toggleSkill(name, btn) {
+  let skills = getMySkills();
+  const idx = skills.indexOf(name);
+  if (idx >= 0) {
+    skills.splice(idx, 1);
+    btn.innerHTML = '&#9734;';
+    btn.title = 'Add to My Skills';
+    btn.style.color = '';
+  } else {
+    skills.push(name);
+    btn.innerHTML = '&#9733;';
+    btn.title = 'Remove from My Skills';
+    btn.style.color = 'var(--primary)';
+  }
+  saveMySkills(skills);
+  updateMySkillsUI();
+}
+
+function toggleMySkills() {
+  const btn = document.getElementById('my-skills-toggle');
+  const label = document.getElementById('my-skills-label');
+  const showing = btn.dataset.active === 'true';
+  btn.dataset.active = showing ? 'false' : 'true';
+  label.innerHTML = (showing ? '&#9734; ' : '&#9733; ') + MY_SKILLS_LABEL;
+  filterByMySkills(!showing);
+}
+
+function filterByMySkills(active) {
+  const skills = getMySkills();
+  document.querySelectorAll('.skill-card').forEach(card => {
+    const name = card.dataset.skillName;
+    if (active) {
+      card.style.display = skills.includes(name) ? '' : 'none';
+    } else {
+      card.style.display = '';
+    }
+  });
+}
+
+function updateMySkillsUI() {
+  const skills = getMySkills();
+  const summary = document.getElementById('my-skills-summary');
+  const list = document.getElementById('my-skills-list');
+  const count = document.getElementById('my-count');
+
+  if (skills.length > 0) {
+    summary.style.display = 'block';
+    count.textContent = skills.length;
+    list.innerHTML = skills.map(s =>
+      '<code style="background:var(--primary-dim);padding:0.1rem 0.3rem;border-radius:3px;margin-right:0.3rem;">' + s + '</code>'
+    ).join('');
+  } else {
+    summary.style.display = 'none';
+  }
+
+  // Update star buttons
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    const name = btn.dataset.name;
+    if (skills.includes(name)) {
+      btn.innerHTML = '&#9733;';
+      btn.title = 'Remove from My Skills';
+      btn.style.color = 'var(--primary)';
+    } else {
+      btn.innerHTML = '&#9734;';
+      btn.title = 'Add to My Skills';
+      btn.style.color = '';
+    }
+  });
+}
+
+function copyMySkillsConfig() {
+  const skills = getMySkills();
+  const text = 'search_skills("your query", names=' + JSON.stringify(skills) + ')';
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Copied: ' + text);
+  });
+}
+
+function copyMySkillNames() {
+  const skills = getMySkills();
+  navigator.clipboard.writeText(skills.join(', ')).then(() => {
+    alert('Copied: ' + skills.join(', '));
+  });
+}
+
+// Init on page load
+document.addEventListener('DOMContentLoaded', () => {
+  updateMySkillsUI();
+});
+</script>
+
+<style>
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.1rem 0.2rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.star-btn:hover {
+  color: var(--primary);
+}
+</style>
+{% endblock %}

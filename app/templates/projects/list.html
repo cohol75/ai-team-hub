@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>项目公告</h1>
+  <a href="/projects/new" class="btn btn-primary">+ 发布公告</a>
+</div>
+
+<div class="search-bar">
+  <input type="text" class="form-control" name="search" placeholder="搜索项目..." value="{{ search }}"
+         hx-get="/projects" hx-trigger="keyup changed delay:300ms"
+         hx-target="#project-list" hx-include="[name='search']" hx-push-url="true">
+</div>
+
+<div id="project-list">
+{% include "components/pagination.html" %}
+
+{% if projects %}
+  {% for p in projects %}
+  <div class="card">
+    <h3><a href="/projects/{{ p.id }}">{{ p.title }}</a></h3>
+    <div class="meta">
+      <span>{{ p.author }}</span>
+      <span>{{ p.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    </div>
+    <div class="excerpt">{{ p.content[:200] }}{% if p.content|length > 200 %}...{% endif %}</div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="card" style="text-align:center;padding:3rem;color:var(--text-muted);">
+    {% if search %}没有匹配的项目{% else %}暂无项目，<a href="/projects/new">发布第一个</a>{% endif %}
+  </div>
+{% endif %}
+
+{% include "components/pagination.html" %}
+</div>
+{% endblock %}

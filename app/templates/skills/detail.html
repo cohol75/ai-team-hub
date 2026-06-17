@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ skill.title }}</h1>
+  <div style="display:flex;gap:0.5rem;">
+    <button id="my-skill-btn" class="btn btn-outline btn-sm" onclick="toggleMySkill('{{ skill.name }}')">
+      &#9734; {{ t('skill_my_skill') }}
+    </button>
+    <a href="/skills/{{ skill.id }}/edit" class="btn btn-outline btn-sm">{{ t('skill_edit') }}</a>
+    <button class="btn btn-danger btn-sm"
+            hx-delete="/api/skills/{{ skill.id }}"
+            hx-confirm="Delete?"
+            hx-redirect="/skills">{{ t('skill_delete') }}</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'ai-team-hub-my-skills';
+function getMySkills() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+function toggleMySkill(name) {
+  let skills = getMySkills();
+  const idx = skills.indexOf(name);
+  const btn = document.getElementById('my-skill-btn');
+  if (idx >= 0) {
+    skills.splice(idx, 1);
+    btn.innerHTML = '&#9734; {{ t('skill_my_skill') }}';
+  } else {
+    skills.push(name);
+    btn.innerHTML = '&#9733; {{ t('skill_my_skill') }}';
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(skills));
+}
+(function() {
+  const skills = getMySkills();
+  if (skills.includes('{{ skill.name }}')) {
+    document.getElementById('my-skill-btn').innerHTML = '&#9733; {{ t('skill_my_skill') }}';
+  }
+})();
+</script>
+
+<div class="meta" style="margin-bottom:1rem;">
+  <span>{{ t('skill_author') }}：{{ skill.author }}</span>
+  <span>{{ t('skill_model') }}：{{ skill.model_used or '' }}</span>
+  <span>{{ t('skill_category') }}：{{ cat_label(skill.category) }}</span>
+  <span>{{ skill.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+</div>
+
+{% if skill.tags %}
+<div style="margin-bottom:1.5rem;">
+  {% for t in skill.tags.split(',') %}
+  <span class="badge" style="background:var(--bg);color:var(--text-muted);border:1px solid var(--border);margin-right:0.3rem;">{{ t.strip() }}</span>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- 使用说明 -->
+<div style="margin-bottom:2rem;">
+  <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);">{{ t('skill_usage') }}</h2>
+  <div class="markdown-body">
+    {{ markdown(skill.human_section) | safe }}
+  </div>
+</div>
+
+<!-- Agent 执行指令 -->
+<div style="margin-bottom:2rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);">
+    <h2 style="font-size:1.1rem;font-weight:600;margin:0;">{{ t('skill_agent_section') }}</h2>
+    <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('agent-yaml').textContent);this.textContent='Copied!';setTimeout(()=>this.textContent='{{ t('skill_copy') }}',1500)">{{ t('skill_copy') }}</button>
+  </div>
+  <pre id="agent-yaml" style="background:#1e1e2e;color:#cdd6f4;padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.8rem;font-family:var(--mono);max-height:600px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;">{{ skill.agent_section }}</pre>
+</div>
+
+<div style="margin-top:2rem;">
+  <a href="/skills" class="btn btn-outline">{{ t('skill_back') }}</a>
+</div>
+{% endblock %}

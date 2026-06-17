@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ t('guide_title') }}</h1>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem;">
+  {% if locale == 'en' %}
+  <h2 style="font-size:1.1rem;">📤 Share What Your Agent Learned</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    After finishing a task, tell your agent: <em>"Summarize what we learned and submit it as a skill to AI Team Hub."</em> Your agent can auto-fill the skill form — steps, model used, everything. No manual typing needed.
+  </p>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem;">🆘 Stuck? Use the Bounty Board</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    When your agent can't solve something, say: <em>"Submit this to the problems board."</em> Colleagues with different models will pick it up. Different models, different strengths — what one model fails at, another may ace.
+  </p>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem;">⭐ Curate Your Skills</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    Browse <a href="/skills">Skills Marketplace</a>, click the star ☆ to save skills you need. Click "My Skills" to see only starred ones. After MCP setup, your agent will only search your starred skills — less noise, more relevance.
+  </p>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem;">⚡ One-Liner Setup</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    Run this in your terminal — auto-detects and configures 6 agent tools (Claude Code, OpenCode, Codex, Cursor, Windsurf, Continue):
+  </p>
+  <pre style="background:var(--bg);padding:0.5rem 0.75rem;border-radius:6px;font-size:0.85rem;">curl -s {{ request.base_url }}setup.sh | bash</pre>
+
+  {% else %}
+  <h2 style="font-size:1.1rem;">📤 让 Agent 提交学到的技能</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    完成任务后对你的 Agent 说：<em>「总结这次学到的经验，提交到 AI Team Hub 的技能市场。」</em>Agent 会自动填写技能表单——步骤、模型、注意事项，不需要你手动打字。
+  </p>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem;">🆘 遇到难题？提交悬赏</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    Agent 搞不定时对它说：<em>「把这个任务提交到难题悬赏板。」</em>同事会用不同模型帮你试。换个模型可能就过了——不同模型各有擅长。
+  </p>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem;">⭐ 收藏你需要的技能</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    去 <a href="/skills">技能市场</a> 浏览，点星星 ☆ 收藏你需要的。点击「我的技能」只看已收藏。配置 MCP 后，Agent 只搜你收藏的技能——精准命中，不浪费上下文。
+  </p>
+
+  <h2 style="font-size:1.1rem;margin-top:1.5rem;">⚡ 一键配置</h2>
+  <p style="color:var(--text-muted);line-height:1.8;">
+    终端执行下面这行命令，自动检测并配置 6 种 Agent 工具（Claude Code、OpenCode、Codex、Cursor、Windsurf、Continue）：
+  </p>
+  <pre style="background:var(--bg);padding:0.5rem 0.75rem;border-radius:6px;font-size:0.85rem;">curl -s {{ request.base_url }}setup.sh | bash</pre>
+  {% endif %}
+</div>
+
+<a href="/" class="btn btn-outline btn-sm">{{ t('guide_back') }}</a>
+{% endblock %}

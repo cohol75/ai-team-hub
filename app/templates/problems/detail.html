@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ problem.title }}</h1>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    {% if problem.status == 'open' %}
+    <span class="badge badge-open">🔴 {{ t('problems_open') }}</span>
+    {% elif problem.status == 'in_progress' %}
+    <span class="badge badge-progress">🟡 {{ t('problems_in_progress') }}</span>
+    {% else %}
+    <span class="badge badge-resolved">🟢 {{ t('problems_resolved') }}</span>
+    {% endif %}
+    {% if problem.resolver %}
+    <span style="font-size:0.85rem;color:var(--text-muted);">{{ t('problem_solver') }}：{{ problem.resolver }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="meta" style="margin-bottom:1.5rem;">
+  <span>{{ t('problems_submitter') }}：{{ problem.submitter }}</span>
+  <span>{{ problem.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+</div>
+
+<!-- 失败记录 -->
+{% set logs = problem.processing_logs | string %}
+{% if logs and logs != '[]' and logs != '' %}
+{% set log_entries = json.loads(logs) if logs.startswith('[') else [] %}
+{% if log_entries %}
+<div class="detail-section">
+  <h2>{{ t('problem_failed_records') }}</h2>
+  <div style="display:grid;gap:0.75rem;">
+    {% for entry in log_entries %}
+    <div class="card" style="border-left:3px solid var(--error);padding:0.75rem 1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;">
+        <strong style="font-size:0.9rem;">{{ entry.get('model', 'Unknown') }}</strong>
+        <span class="badge" style="background:var(--error);color:#fff;font-size:0.65rem;">{{ t('problem_failed_badge') }}</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.25rem;">
+        {{ entry.get('result', '') }}
+      </div>
+      {% if entry.get('timestamp') %}
+      <div style="font-size:0.7rem;color:var(--text-muted);opacity:0.7;">{{ entry.get('timestamp') }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- 原始任务 -->
+<div class="detail-section">
+  <h2>{{ t('problem_original_task') }}</h2>
+  <div class="markdown-body" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;">{{ markdown(problem.original_task) | safe }}</div>
+</div>
+
+<!-- 同事尝试 -->
+{% if problem.attempts %}
+<div class="detail-section">
+  <h2>{{ t('problem_attempts_title') }} ({{ problem.attempts|length }})</h2>
+  {% for a in problem.attempts %}
+  <div class="card" style="margin-bottom:0.75rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+      <strong>{{ a.solver }}</strong>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <span style="font-size:0.8rem;color:var(--text-muted);">{{ a.model_used }}</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);">{{ a.created_at.strftime('%m-%d %H:%M') }}</span>
+      </div>
+    </div>
+    {% if a.approach %}
+    <div style="font-size:0.85rem;margin-bottom:0.35rem;">
+      <span style="color:var(--text-muted);">{{ t('problem_approach') }}：</span>{{ a.approach }}
+    </div>
+    {% endif %}
+    <div style="font-size:0.85rem;">
+      <span style="color:var(--text-muted);">{{ t('problem_result') }}：</span>{{ a.result }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Resolution -->
+{% if problem.status == 'resolved' and problem.resolution %}
+<div class="detail-section" style="background:var(--surface);border:1px solid var(--success);border-radius:var(--radius);padding:1.25rem;">
+  <h2 style="color:#065f46;">{{ t('problem_resolution_title') }}</h2>
+  <div class="markdown-body">{{ markdown(problem.resolution) | safe }}</div>
+</div>
+{% endif %}
+
+<!-- 如何接手 -->
+{% if problem.status != 'resolved' %}
+<div class="detail-section">
+  <h2>{{ t('problem_how_to_takeover') }}</h2>
+
+  <div class="card" style="border-color:var(--primary);background:#f8faff;margin-bottom:1.5rem;">
+    <div style="font-size:0.85rem;line-height:1.8;">
+      <strong>1.</strong> {{ t('problem_takeover_1') }}<br>
+      <strong>2.</strong> {{ t('problem_takeover_2') }}<br>
+      <strong>3.</strong> {{ t('problem_takeover_3') }}<br>
+      <strong>4.</strong> {{ t('problem_takeover_4') }}
+    </div>
+  </div>
+
+  <form method="post" action="/problems/{{ problem.id }}/attempts" style="margin-bottom:1.5rem;">
+    <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">{{ t('problem_submit_attempt') }}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group">
+        <label>{{ t('problem_your_name') }}</label>
+        <input type="text" class="form-control" name="solver" required>
+      </div>
+      <div class="form-group">
+        <label>{{ t('problem_model_used') }}</label>
+        <input type="text" class="form-control" name="model_used" placeholder="e.g. claude-opus-4, deepseek-v3" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>{{ t('problem_approach_label') }}</label>
+      <textarea class="form-control" name="approach" rows="2" placeholder="{{ t('problem_approach_placeholder') }}"></textarea>
+    </div>
+    <div class="form-group">
+      <label>{{ t('problem_result_label') }}</label>
+      <textarea class="form-control" name="result" rows="2" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t('problem_submit_btn') }}</button>
+  </form>
+
+  <form method="post" action="/problems/{{ problem.id }}/resolve" style="border-top:1px solid var(--border);padding-top:1.5rem;">
+    <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">{{ t('problem_mark_resolved') }}</h3>
+    <div class="form-group">
+      <label>{{ t('problem_resolver_field') }}</label>
+      <input type="text" class="form-control" name="resolver" required>
+    </div>
+    <div class="form-group">
+      <label>{{ t('problem_solution_field') }}</label>
+      <textarea class="form-control" name="resolution" rows="4" required placeholder="{{ t('problem_solution_placeholder') }}"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t('problem_resolve_btn') }}</button>
+  </form>
+</div>
+{% endif %}
+
+<div style="margin-top:2rem;">
+  <a href="/problems" class="btn btn-outline">{{ t('problem_back') }}</a>
+  <button class="btn btn-danger btn-sm" style="margin-left:0.5rem;"
+          hx-delete="/api/problems/{{ problem.id }}"
+          hx-confirm="Delete?" hx-redirect="/problems">{{ t('problem_delete') }}</button>
+</div>
+{% endblock %}

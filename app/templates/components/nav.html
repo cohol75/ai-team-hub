@@ -1,0 +1,25 @@
+<aside class="sidebar">
+  <div class="logo">AI <span>Team Hub</span></div>
+  <nav>
+    <a href="/" class="{{ 'active' if request.url.path == '/' else '' }}">
+      <span class="icon">&#8962;</span> <span>{{ t('nav_home') }}</span>
+    </a>
+
+    <div class="section-label">{{ t('nav_collab') }}</div>
+    <a href="/projects" class="{{ 'active' if request.url.path.startswith('/projects') else '' }}">
+      <span class="icon">&#9776;</span> <span>{{ t('nav_projects') }}</span>
+    </a>
+    <a href="/skills" class="{{ 'active' if request.url.path.startswith('/skills') else '' }}">
+      <span class="icon">&#9881;</span> <span>{{ t('nav_skills') }}</span>
+    </a>
+    <a href="/problems" class="{{ 'active' if request.url.path.startswith('/problems') else '' }}">
+      <span class="icon">&#9878;</span> <span>{{ t('nav_problems') }}</span>
+    </a>
+  </nav>
+
+  <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--primary-dim);">
+    <a href="/lang/{{ 'en' if locale == 'zh' else 'zh' }}" class="lang-toggle">
+      {{ t('lang_switch') }}
+    </a>
+  </div>
+</aside>

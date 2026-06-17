@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>提交难题</h1>
+</div>
+
+<form method="post" action="/problems/new">
+  <div class="form-group">
+    <label>难题标题</label>
+    <input type="text" class="form-control" name="title" required maxlength="200"
+           value="{{ problem.title if problem else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label>提交者</label>
+    <input type="text" class="form-control" name="submitter" required maxlength="100"
+           value="{{ problem.submitter if problem else '' }}">
+  </div>
+
+  <div class="form-group">
+    <label>原始任务要求（Markdown）</label>
+    <textarea class="form-control" name="original_task" required style="min-height:200px;"
+              placeholder="描述原始任务的内容和要求...">{{ problem.original_task if problem else '' }}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label>处理日志（JSON 数组）</label>
+    <textarea class="form-control code" name="processing_logs" style="min-height:150px;"
+              placeholder='[&#10;  {"model": "zhipu-glm-4", "status": "failed", "result": "timeout error", "timestamp": "2026-06-17 10:00"},&#10;  {"model": "deepseek-v3", "status": "failed", "result": "incorrect output", "timestamp": "2026-06-17 10:15"}&#10;]'>{{ problem.processing_logs if problem else '[]' }}</textarea>
+    <div style="margin-top:0.25rem;font-size:0.8rem;color:var(--text-muted);">
+      记录各模型/API 的尝试情况。格式：JSON 数组，每项含 model、status、result、timestamp
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">提交难题</button>
+  <a href="/problems" class="btn btn-outline">取消</a>
+</form>
+{% endblock %}
